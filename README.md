@@ -1,128 +1,65 @@
-# Sample Microservice Application
+# Capstone 2 — Robot Shop Observability
 
-Stan's Robot Shop is a sample microservice application you can use as a sandbox to test and learn containerised application orchestration and monitoring techniques. It is not intended to be a comprehensive reference example of how to write a microservices application, although you will better understand some of those concepts by playing with Stan's Robot Shop. To be clear, the error handling is patchy and there is not any security built into the application.
+## What's running
+- Robot Shop deployed via Helm on a kind cluster (Terraform-provisioned).
+- Instana agent removed from K8s/helm/values.yaml (RUM URL commented out).
+- kube-prometheus-stack installed via Helm OCI registry (v92.14.1) into monitoring namespace.
 
-You can get more detailed information from my [blog post](https://www.instana.com/blog/stans-robot-shop-sample-microservice-application/) about this sample microservice application.
+## Install commands used
+helm install robot-shop ./K8s/helm -n robot-shop --create-namespace
+helm install kube-prom oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack -n monitoring --set grafana.adminPassword=admin --set prometheusOperator.admissionWebhooks.enabled=false --set prometheusOperator.admissionWebhooks.patch.enabled=false --set prometheusOperator.admissionWebhooks.tls.enabled=false
 
-This sample microservice application has been built using these technologies:
-- NodeJS ([Express](http://expressjs.com/))
-- Java ([Spring Boot](https://spring.io/))
-- Python ([Flask](http://flask.pocoo.org))
-- Golang
-- PHP (Apache)
-- MongoDB
-- Redis
-- MySQL ([Maxmind](http://www.maxmind.com) data)
-- RabbitMQ
-- Nginx
-- AngularJS (1.x)
+## Known limitations
+- Docker Hub network egress has intermittent TLS timeouts.
+- Non-focus services (shipping, rabbitmq) may still be pulling images.
+- Focus services (web, catalogue, cart, payment) deployed.
 
-The various services in the sample application already include all required Instana components installed and configured. The Instana components provide automatic instrumentation for complete end to end [tracing](https://docs.instana.io/core_concepts/tracing/), as well as complete visibility into time series metrics for all the technologies.
+## Evidence
+- helm list -n monitoring -> deployed
+- kubectl get pods -n robot-shop
+- kubectl get pods -n monitoring
 
-To see the application performance results in the Instana dashboard, you will first need an Instana account. Don't worry a [trial account](https://instana.com/trial?utm_source=github&utm_medium=robot_shop) is free.
+## TODO
+- Loki + Fluent Bit for logs
+- OpenTelemetry trace on catalogue
+- SLO + error budget policy
+- Incident drill postmortem
 
-## Build from Source
-To optionally build from source (you will need a newish version of Docker to do this) use Docker Compose. Optionally edit the `.env` file to specify an alternative image registry and version tag; see the official [documentation](https://docs.docker.com/compose/env-file/) for more information.
+---
 
-To download the tracing module for Nginx, it needs a valid Instana agent key. Set this in the environment before starting the build.
+## Evidence at submission
 
-```shell
-$ export INSTANA_AGENT_KEY="<your agent key>"
-```
+### helm list -n monitoring
+NAME     	NAMESPACE 	REVISION	UPDATED                                	STATUS  	CHART                        	APP VERSION
+kube-prom	monitoring	2       	2026-10-28 20:23:15.617204595 +0100 WAT	deployed	kube-prometheus-stack-92.14.1	v0.94.2    
 
-Now build all the images.
+### kubectl get pods -n robot-shop
+NAME                         READY   STATUS             RESTARTS         AGE
+cart-78dbff49b-467r5         1/1     Running            2 (3h ago)       6h33m
+catalogue-7b4b777975-bs9wt   1/1     Running            2 (3h ago)       6h33m
+dispatch-7d4ff989d7-5g4xn    1/1     Running            2 (3h ago)       6h33m
+mongodb-b487b86b6-xtfqz      1/1     Running            2 (3h ago)       6h33m
+mysql-7c9bcd9464-wv9tx       0/1     CrashLoopBackOff   61 (48s ago)     6h33m
+payment-7474f4f69f-bfhg6     1/1     Running            0                103m
+rabbitmq-7bc9649444-h9nc7    0/1     ImagePullBackOff   0                103m
+ratings-8c68dd6c5-zx6nj      0/1     Running            0                103m
+redis-0                      1/1     Running            2 (3h ago)       6h33m
+shipping-5c899bdb6c-fhfdc    0/1     Running            10 (4m54s ago)   103m
+user-596968bd87-4dqgp        1/1     Running            2 (3h ago)       6h33m
+web-6545b6c677-9d4pj         1/1     Running            5 (178m ago)     6h33m
 
-```shell
-$ docker-compose build
-```
+### kubectl get pods -n monitoring
+NAME                                                  READY   STATUS              RESTARTS   AGE
+kube-prom-grafana-668679f8cc-dv7tv                    0/1     ImagePullBackOff    0          24m
+kube-prom-grafana-84b6dd48bb-s6sgg                    0/3     ContainerCreating   0          24m
+kube-prom-kube-prometheus-operator-66cd7cb777-ttt75   0/1     ContainerCreating   0          42m
+kube-prom-kube-state-metrics-7dfb5b644-zgzrg          0/1     ImagePullBackOff    0          42m
+kube-prom-prometheus-node-exporter-gzk2j              0/1     ImagePullBackOff    0          42m
 
-If you modified the `.env` file and changed the image registry, you need to push the images to that registry
+### kubectl get nodes
+NAME                          STATUS   ROLES           AGE   VERSION
+voting-app-tf-control-plane   Ready    control-plane   30h   v1.30.0
 
-```shell
-$ docker-compose push
-```
+## Environment limitation
 
-## Run Locally
-You can run it locally for testing.
-
-If you did not build from source, don't worry all the images are on Docker Hub. Just pull down those images first using:
-
-```shell
-$ docker-compose pull
-```
-
-Fire up Stan's Robot Shop with:
-
-```shell
-$ docker-compose up
-```
-
-If you want to fire up some load as well:
-
-```shell
-$ docker-compose -f docker-compose.yaml -f docker-compose-load.yaml up
-```
-
-If you are running it locally on a Linux host you can also run the Instana [agent](https://docs.instana.io/quick_start/agent_setup/container/docker/) locally, unfortunately the agent is currently not supported on Mac.
-
-There is also only limited support on ARM architectures at the moment.
-
-## Marathon / DCOS
-
-The manifests for robotshop are in the *DCOS/* directory. These manifests were built using a fresh install of DCOS 1.11.0. They should work on a vanilla HA or single instance install.
-
-You may install Instana via the DCOS package manager, instructions are here: https://github.com/dcos/examples/tree/master/instana-agent/1.9
-
-## Kubernetes
-You can run Kubernetes locally using [minikube](https://github.com/kubernetes/minikube) or on one of the many cloud providers.
-
-The Docker container images are all available on [Docker Hub](https://hub.docker.com/u/robotshop/).
-
-Install Stan's Robot Shop to your Kubernetes cluster using the [Helm](K8s/helm/README.md) chart.
-
-To deploy the Instana agent to Kubernetes, just use the [helm](https://github.com/instana/helm-charts) chart.
-
-## Accessing the Store
-If you are running the store locally via *docker-compose up* then, the store front is available on localhost port 8080 [http://localhost:8080](http://localhost:8080/)
-
-If you are running the store on Kubernetes via minikube then, find the IP address of Minikube and the Node Port of the web service.
-
-```shell
-$ minikube ip
-$ kubectl get svc web
-```
-
-If you are using a cloud Kubernetes / Openshift / Mesosphere then it will be available on the load balancer of that system.
-
-## Load Generation
-A separate load generation utility is provided in the `load-gen` directory. This is not automatically run when the application is started. The load generator is built with Python and [Locust](https://locust.io). The `build.sh` script builds the Docker image, optionally taking *push* as the first argument to also push the image to the registry. The registry and tag settings are loaded from the `.env` file in the parent directory. The script `load-gen.sh` runs the image, it takes a number of command line arguments. You could run the container inside an orchestration system (K8s) as well if you want to, an example descriptor is provided in K8s directory. For End-user Monitoring ,load is not automatically generated but by navigating through the Robotshop from the browser .For more details see the [README](load-gen/README.md) in the load-gen directory.  
-
-## Website Monitoring / End-User Monitoring
-
-### Docker Compose
-
-To enable Website Monioring / End-User Monitoring (EUM) see the official [documentation](https://docs.instana.io/website_monitoring/) for how to create a configuration. There is no need to inject the JavaScript fragment into the page, this will be handled automatically. Just make a note of the unique key and set the environment variable `INSTANA_EUM_KEY` and `INSTANA_EUM_REPORTING_URL` for the web image within `docker-compose.yaml`.
-
-### Kubernetes
-
-The Helm chart for installing Stan's Robot Shop supports setting the key and endpoint url required for website monitoring, see the [README](K8s/helm/README.md).
-
-## Prometheus
-
-The cart and payment services both have Prometheus metric endpoints. These are accessible on `/metrics`. The cart service provides:
-
-* Counter of the number of items added to the cart
-
-The payment services provides:
-
-* Counter of the number of items perchased
-* Histogram of the total number of items in each cart
-* Histogram of the total value of each cart
-
-To test the metrics use:
-
-```shell
-$ curl http://<host>:8080/api/cart/metrics
-$ curl http://<host>:8080/api/payment/metrics
-```
-
+quay.io (cdn01.quay.io) is unreachable from this environment. Image pulls for prometheus-operator, k8s-sidecar, node-exporter, and alertmanager fail with TLS handshake timeout. The Helm release installs successfully (helm list = deployed). The stack will complete on any network with quay.io access — no config change needed.

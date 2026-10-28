@@ -1,0 +1,6 @@
+NAME                                                  READY   STATUS              RESTARTS   AGE
+kube-prom-grafana-668679f8cc-dv7tv                    0/1     ImagePullBackOff    0          24m
+kube-prom-grafana-84b6dd48bb-s6sgg                    0/3     ContainerCreating   0          24m
+kube-prom-kube-prometheus-operator-66cd7cb777-ttt75   0/1     ContainerCreating   0          42m
+kube-prom-kube-state-metrics-7dfb5b644-zgzrg          0/1     ImagePullBackOff    0          42m
+kube-prom-prometheus-node-exporter-gzk2j              0/1     ImagePullBackOff    0          42m

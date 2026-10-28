@@ -1,0 +1,2 @@
+NAME                          STATUS   ROLES           AGE   VERSION
+voting-app-tf-control-plane   Ready    control-plane   30h   v1.30.0

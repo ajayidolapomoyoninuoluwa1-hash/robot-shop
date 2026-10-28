@@ -1,0 +1,13 @@
+NAME                         READY   STATUS             RESTARTS         AGE
+cart-78dbff49b-467r5         1/1     Running            2 (3h ago)       6h33m
+catalogue-7b4b777975-bs9wt   1/1     Running            2 (3h ago)       6h33m
+dispatch-7d4ff989d7-5g4xn    1/1     Running            2 (3h ago)       6h33m
+mongodb-b487b86b6-xtfqz      1/1     Running            2 (3h ago)       6h33m
+mysql-7c9bcd9464-wv9tx       0/1     CrashLoopBackOff   61 (48s ago)     6h33m
+payment-7474f4f69f-bfhg6     1/1     Running            0                103m
+rabbitmq-7bc9649444-h9nc7    0/1     ImagePullBackOff   0                103m
+ratings-8c68dd6c5-zx6nj      0/1     Running            0                103m
+redis-0                      1/1     Running            2 (3h ago)       6h33m
+shipping-5c899bdb6c-fhfdc    0/1     Running            10 (4m54s ago)   103m
+user-596968bd87-4dqgp        1/1     Running            2 (3h ago)       6h33m
+web-6545b6c677-9d4pj         1/1     Running            5 (178m ago)     6h33m

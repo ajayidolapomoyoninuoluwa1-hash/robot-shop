@@ -1,0 +1,2 @@
+NAME     	NAMESPACE 	REVISION	UPDATED                                	STATUS  	CHART                        	APP VERSION
+kube-prom	monitoring	2       	2026-10-28 20:23:15.617204595 +0100 WAT	deployed	kube-prometheus-stack-92.14.1	v0.94.2    
