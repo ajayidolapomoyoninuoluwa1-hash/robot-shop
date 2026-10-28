@@ -63,3 +63,6 @@ voting-app-tf-control-plane   Ready    control-plane   30h   v1.30.0
 ## Environment limitation
 
 quay.io (cdn01.quay.io) is unreachable from this environment. Image pulls for prometheus-operator, k8s-sidecar, node-exporter, and alertmanager fail with TLS handshake timeout. The Helm release installs successfully (helm list = deployed). The stack will complete on any network with quay.io access — no config change needed.
+
+## Visual evidence
+Robot Shop storefront loaded successfully at http://localhost:8080 — see [evidence/robot-shop-homepage.pdf](evidence/robot-shop-homepage.pdf).
